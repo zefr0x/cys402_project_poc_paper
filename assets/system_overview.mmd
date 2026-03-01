@@ -1,0 +1,37 @@
+sequenceDiagram
+    actor Alice
+    participant BlockChain
+    actor Bob
+
+    Alice->>Alice: Generate private key and public-key share
+    Bob->>Bob: Generate private key and public-key share
+
+    Alice->>BlockChain: Store public-key share
+    Bob ->>BlockChain: Store public-key share
+
+    Alice->>Alice: Initiate voting round
+    activate Alice
+    BlockChain-->>Alice: Aggregate public key shares
+    Alice->>BlockChain: Store encrypted vote
+    BlockChain-->>Bob: Notified of an initiated voting round
+    activate Bob
+
+    BlockChain-->>Bob: Aggregate public key shares
+    Bob->>BlockChain: Store encrypted vote
+
+    BlockChain-->>Alice: Aggregate encrypted votes
+    BlockChain-->>Bob: Aggregate encrypted votes
+
+    Alice->>Alice: Do operations on votes data
+    Bob->>Bob: Do operations on votes data
+
+    Alice->>BlockChain: Store decryption share
+    Bob ->>BlockChain: Store decryption share
+
+    BlockChain-->>Alice: Aggregate decreption shares
+    BlockChain-->>Bob: Aggregate decreption share
+
+    Alice->>Alice: Obtain voting tally results
+    deactivate Alice
+    Bob->>Bob: Obtain voting tally results
+    deactivate Bob
