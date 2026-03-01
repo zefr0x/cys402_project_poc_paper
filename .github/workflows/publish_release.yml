@@ -1,0 +1,68 @@
+# This Github workflow will create a new release and compile the paper to PDF.
+
+name: Build and Release PDF
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "assets/**"
+      - "*.typ"
+      - "*.bib"
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Set up nodejs
+        uses: actions/setup-node@v6
+        with:
+          node-version: "25"
+
+      - name: Install fonts
+        run: sudo apt -y install fonts-noto
+
+      - name: Install python dependencies
+        run: pip install -r ./assets/graphs/requirements.txt
+
+      - name: Install mermaid-cli
+        run: npm install -g @mermaid-js/mermaid-cli@11.12.0
+
+      - name: Install typst
+        run: |
+          wget https://github.com/typst/typst/releases/download/v0.14.2/typst-x86_64-unknown-linux-musl.tar.xz
+          tar -xf typst-x86_64-unknown-linux-musl.tar.xz
+          ./typst-x86_64-unknown-linux-musl/typst --version
+          echo "$(pwd)/typst-x86_64-unknown-linux-musl" >> $GITHUB_PATH
+
+      - name: Generate matplotlib graphs
+        working-directory: ./assets/graphs/
+        run: |
+          python ./block_size.py
+          python ./homomorphic_timings.py
+
+      - name: Compile mermaid graphs
+        working-directory: ./assets/
+        run: npx mmdc -i system_overview.mmd -o system_overview.mmd.pdf
+
+      - name: Compile the paper
+        run: typst compile main.typ
+
+      - name: Create release with a tag and upload main.pdf
+        uses: softprops/action-gh-release@v2
+        with:
+          files: main.pdf
+          tag_name: v${{ github.run_number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
