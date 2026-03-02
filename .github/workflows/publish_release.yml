@@ -54,7 +54,7 @@ jobs:
 
       - name: Compile mermaid graphs
         working-directory: ./assets/
-        run: npx mmdc -i system_overview.mmd -o system_overview.mmd.pdf
+        run: npx mmdc --outputFormat pdf --pdfFit -i system_overview.mmd
 
       - name: Compile the paper
         run: typst compile main.typ
